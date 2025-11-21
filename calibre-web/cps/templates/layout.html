@@ -158,6 +158,12 @@
                 {% endfor %}
               {% if not current_user.is_anonymous %}
                 <li id="nav_createshelf" class="create-shelf"><a href="{{url_for('shelf.create_shelf')}}">{{_('Create a Shelf')}}</a></li>
+                <li class="nav-head hidden-xs">{{_('Wallabag')}}</li>
+                {% if g.wallabag_enabled %}
+                <li id="nav_wallabag" {% if page == 'wallabag' %}class="active"{% endif %}><a href="{{url_for('wallabag.index')}}"><span class="glyphicon glyphicon-globe"></span> {{_('Articles')}}</a></li>
+                <li id="nav_wallabag_add" {% if page == 'wallabag_add' %}class="active"{% endif %}><a href="{{url_for('wallabag.add_article')}}"><span class="glyphicon glyphicon-plus"></span> {{_('Add Article')}}</a></li>
+                {% endif %}
+                <li id="nav_wallabag_settings" {% if page == 'wallabag_settings' %}class="active"{% endif %}><a href="{{url_for('wallabag.settings')}}"><span class="glyphicon glyphicon-cog"></span> {{_('Wallabag Settings')}}</a></li>
                 <li id="nav_about" {% if page == 'stat' %}class="active"{% endif %}><a href="{{url_for('about.stats')}}"><span class="glyphicon glyphicon-info-sign"></span> {{_('About')}}</a></li>
               {% endif %}
               {% endif %}

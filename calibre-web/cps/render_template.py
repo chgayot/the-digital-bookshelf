@@ -103,6 +103,18 @@ def get_sidebar_config(kwargs=None):
     g.shelves_access = ub.session.query(ub.Shelf).filter(
         or_(ub.Shelf.is_public == 1, ub.Shelf.user_id == current_user.id)).order_by(ub.Shelf.name).all()
 
+    # Check if Wallabag is enabled for current user
+    g.wallabag_enabled = False
+    if current_user.is_authenticated and not current_user.is_anonymous:
+        try:
+            wb_config = ub.session.query(ub.WallabagConfig).filter(
+                ub.WallabagConfig.user_id == current_user.id,
+                ub.WallabagConfig.enabled == True
+            ).first()
+            g.wallabag_enabled = wb_config is not None
+        except Exception:
+            g.wallabag_enabled = False
+
     return sidebar, simple
 
 
