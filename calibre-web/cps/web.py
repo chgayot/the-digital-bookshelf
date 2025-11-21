@@ -830,6 +830,94 @@ def books_table():
                                  visiblility=visibility)
 
 
+@web.route("/library")
+@web.route("/library/<tag_filter>")
+@login_required_if_no_ano
+def library_view(tag_filter=None):
+    """Display books as vertical spines grouped by tag, sorted by difficulty then size."""
+    import hashlib
+    import re
+
+    def get_spine_color(title):
+        """Generate a consistent color from book title."""
+        hash_val = hashlib.md5(title.encode()).hexdigest()[:6]
+        # Darken colors slightly for better text contrast
+        r = max(40, min(180, int(hash_val[0:2], 16)))
+        g = max(40, min(180, int(hash_val[2:4], 16)))
+        b = max(40, min(180, int(hash_val[4:6], 16)))
+        return f"rgb({r}, {g}, {b})"
+
+    def get_difficulty(tags):
+        """Extract difficulty level from tags (diff:0 to diff:5)."""
+        for tag in tags:
+            match = re.match(r'diff:(\d)', tag.name.lower())
+            if match:
+                return int(match.group(1))
+        return None  # No difficulty tag
+
+    def get_book_size(book):
+        """Get size indicator (pages or words or file size)."""
+        # Try custom columns for pages/words first
+        for cc_name in ['pages', 'words', '#pages', '#words']:
+            cc_val = getattr(book, f'custom_column_{cc_name}', None)
+            if cc_val:
+                return cc_val
+        # Fallback to file size
+        if book.data:
+            return max((d.uncompressed_size for d in book.data), default=50000)
+        return 50000  # Default
+
+    def calculate_spine_height(size):
+        """Calculate spine height (100-280px) based on book size."""
+        MIN_HEIGHT, MAX_HEIGHT = 100, 280
+        MIN_SIZE, MAX_SIZE = 10000, 500000  # ~10KB to 500KB
+        normalized = min(1, max(0, (size - MIN_SIZE) / (MAX_SIZE - MIN_SIZE)))
+        return int(MIN_HEIGHT + normalized * (MAX_HEIGHT - MIN_HEIGHT))
+
+    # Get all books with tags
+    entries = calibre_db.session.query(db.Books).join(db.books_tags_link).join(db.Tags).all()
+
+    # Organize by tags
+    books_by_tag = {}
+    for book in entries:
+        # Filter by specific tag if requested
+        for tag in book.tags:
+            if tag_filter and tag.name != tag_filter:
+                continue
+            if tag.name.lower().startswith('diff:'):
+                continue  # Skip difficulty tags as categories
+
+            if tag.name not in books_by_tag:
+                books_by_tag[tag.name] = {}
+
+            difficulty = get_difficulty(book.tags)
+            diff_key = difficulty if difficulty is not None else 'none'
+            if diff_key not in books_by_tag[tag.name]:
+                books_by_tag[tag.name][diff_key] = []
+
+            size = get_book_size(book)
+            author = book.authors[0].name.replace('|', ', ') if book.authors else 'Unknown'
+            books_by_tag[tag.name][diff_key].append({
+                'id': book.id,
+                'title': book.title,
+                'author': author,
+                'pages': size // 1000,  # Rough page estimate
+                'spine_height': calculate_spine_height(size),
+                'spine_color': get_spine_color(book.title),
+                'difficulty': diff_key
+            })
+
+    # Sort within each tag: by difficulty (0-5, then none), then by size (smallest first)
+    for tag_name in books_by_tag:
+        sorted_difficulties = {}
+        for diff_key in sorted(books_by_tag[tag_name].keys(), key=lambda x: (x == 'none', x if x != 'none' else 99)):
+            sorted_difficulties[diff_key] = sorted(books_by_tag[tag_name][diff_key], key=lambda b: b['spine_height'])
+        books_by_tag[tag_name] = sorted_difficulties
+
+    return render_title_template('library.html', books_by_tag=books_by_tag,
+                                 title=_("Library View"), page="library")
+
+
 @web.route("/ajax/listbooks")
 @user_login_required
 def list_books():
