@@ -276,6 +276,24 @@ class OAuthProvider(Base):
     active = Column(Boolean)
 
 
+class WallabagConfig(Base):
+    """Configuration for Wallabag integration per user."""
+    __tablename__ = 'wallabag_config'
+
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey('user.id'), unique=True)
+    enabled = Column(Boolean, default=False)
+    host = Column(String(512), default="")  # Wallabag server URL
+    client_id = Column(String(256), default="")  # OAuth2 client ID
+    client_secret = Column(String(256), default="")  # OAuth2 client secret
+    username = Column(String(256), default="")  # Wallabag username
+    password = Column(String(256), default="")  # Wallabag password (stored encrypted ideally)
+    access_token = Column(String(512), default="")  # Current access token
+    refresh_token = Column(String(512), default="")  # Current refresh token
+
+    user = relationship('User', backref=backref('wallabag_config', uselist=False))
+
+
 # Class for anonymous user is derived from User base and completely overrides methods and properties for the
 # anonymous user
 class Anonymous(AnonymousUserMixin, UserBase):

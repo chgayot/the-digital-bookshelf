@@ -1,0 +1,107 @@
+{% extends "layout.html" %}
+{% block body %}
+<div class="discover">
+    <h2>
+        {{_('Articles')}}
+        <small>
+            <a href="{{ url_for('wallabag.refresh') }}" class="btn btn-default btn-xs" title="{{_('Refresh')}}">
+                <span class="glyphicon glyphicon-refresh"></span>
+            </a>
+            <a href="{{ url_for('wallabag.add_article') }}" class="btn btn-primary btn-xs">
+                <span class="glyphicon glyphicon-plus"></span> {{_('Add Article')}}
+            </a>
+        </small>
+    </h2>
+
+    <ul class="nav nav-pills" style="margin-bottom: 15px;">
+        <li role="presentation" {% if filter_type == 'unread' %}class="active"{% endif %}>
+            <a href="{{ url_for('wallabag.index', filter='unread') }}">{{_('Unread')}}</a>
+        </li>
+        <li role="presentation" {% if filter_type == 'archived' %}class="active"{% endif %}>
+            <a href="{{ url_for('wallabag.index', filter='archived') }}">{{_('Archived')}}</a>
+        </li>
+        <li role="presentation" {% if filter_type == 'starred' %}class="active"{% endif %}>
+            <a href="{{ url_for('wallabag.index', filter='starred') }}">{{_('Starred')}}</a>
+        </li>
+        <li role="presentation" {% if filter_type == 'all' %}class="active"{% endif %}>
+            <a href="{{ url_for('wallabag.index', filter='all') }}">{{_('All')}}</a>
+        </li>
+        <li role="presentation">
+            <a href="{{ url_for('wallabag.tags') }}">{{_('Tags')}}</a>
+        </li>
+    </ul>
+
+    {% if entries %}
+    <div class="row">
+        {% for entry in entries %}
+        <div class="col-sm-6 col-md-4 col-lg-3">
+            <div class="panel panel-default">
+                {% if entry.preview_picture %}
+                <div class="panel-image" style="background-image: url('{{ entry.preview_picture }}'); height: 120px; background-size: cover; background-position: center;"></div>
+                {% endif %}
+                <div class="panel-body">
+                    <h4 class="panel-title" style="margin-bottom: 10px;">
+                        <a href="{{ url_for('wallabag.view_article', entry_id=entry.id) }}" title="{{ entry.title }}">
+                            {{ entry.title[:60] }}{% if entry.title|length > 60 %}...{% endif %}
+                        </a>
+                    </h4>
+                    <p class="text-muted small">
+                        {% if entry.domain_name %}{{ entry.domain_name }}{% endif %}
+                        {% if entry.reading_time %} &middot; {{ entry.reading_time }} min{% endif %}
+                    </p>
+                    {% if entry.tags %}
+                    <p>
+                        {% for tag in entry.tags[:3] %}
+                        <a href="{{ url_for('wallabag.articles_by_tag', tag_slug=tag.slug) }}" class="label label-default">{{ tag.label }}</a>
+                        {% endfor %}
+                    </p>
+                    {% endif %}
+                </div>
+                <div class="panel-footer">
+                    <div class="btn-group btn-group-xs" role="group">
+                        <form action="{{ url_for('wallabag.star_article', entry_id=entry.id) }}" method="post" style="display: inline;">
+                            <button type="submit" class="btn btn-default" title="{% if entry.is_starred %}{{_('Unstar')}}{% else %}{{_('Star')}}{% endif %}">
+                                <span class="glyphicon glyphicon-star{% if not entry.is_starred %}-empty{% endif %}"></span>
+                            </button>
+                        </form>
+                        <form action="{{ url_for('wallabag.archive_article', entry_id=entry.id) }}" method="post" style="display: inline;">
+                            <button type="submit" class="btn btn-default" title="{% if entry.is_archived %}{{_('Mark Unread')}}{% else %}{{_('Archive')}}{% endif %}">
+                                <span class="glyphicon glyphicon-{% if entry.is_archived %}eye-open{% else %}eye-close{% endif %}"></span>
+                            </button>
+                        </form>
+                        <a href="{{ url_for('wallabag.export_article', entry_id=entry.id, format='epub') }}" class="btn btn-default" title="{{_('Export as EPUB')}}">
+                            <span class="glyphicon glyphicon-download"></span>
+                        </a>
+                        <form action="{{ url_for('wallabag.delete_article', entry_id=entry.id) }}" method="post" style="display: inline;" onsubmit="return confirm('{{_('Delete this article?')}}');">
+                            <button type="submit" class="btn btn-danger" title="{{_('Delete')}}">
+                                <span class="glyphicon glyphicon-trash"></span>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    {% if current_page > 1 or entries|length == 30 %}
+    <nav aria-label="Page navigation">
+        <ul class="pager">
+            {% if current_page > 1 %}
+            <li class="previous"><a href="{{ url_for('wallabag.index', filter=filter_type, page=current_page-1) }}">&larr; {{_('Previous')}}</a></li>
+            {% endif %}
+            {% if entries|length == 30 %}
+            <li class="next"><a href="{{ url_for('wallabag.index', filter=filter_type, page=current_page+1) }}">{{_('Next')}} &rarr;</a></li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+
+    {% else %}
+    <div class="alert alert-info">
+        {{_('No articles found.')}}
+        <a href="{{ url_for('wallabag.add_article') }}">{{_('Add your first article')}}</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,30 @@
+{% extends "layout.html" %}
+{% block body %}
+<div class="discover">
+    <h2>{{_('Add Article')}}</h2>
+
+    <div class="row">
+        <div class="col-md-6 col-md-offset-3">
+            <form method="post" action="{{ url_for('wallabag.add_article') }}">
+                <div class="form-group">
+                    <label for="url">{{_('URL')}}</label>
+                    <input type="url" class="form-control" id="url" name="url" required
+                           placeholder="https://example.com/article">
+                </div>
+
+                <div class="form-group">
+                    <label for="tags">{{_('Tags')}} ({{_('optional')}})</label>
+                    <input type="text" class="form-control" id="tags" name="tags"
+                           placeholder="tag1, tag2, tag3">
+                    <p class="help-block">{{_('Comma-separated list of tags')}}</p>
+                </div>
+
+                <div class="form-group">
+                    <button type="submit" class="btn btn-primary">{{_('Save Article')}}</button>
+                    <a href="{{ url_for('wallabag.index') }}" class="btn btn-default">{{_('Cancel')}}</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,25 @@
+{% extends "layout.html" %}
+{% block body %}
+<div class="discover">
+    <h2>{{_('Tags')}}</h2>
+
+    <p><a href="{{ url_for('wallabag.index') }}">&larr; {{_('Back to Articles')}}</a></p>
+
+    {% if tags %}
+    <div class="row">
+        {% for tag in tags %}
+        <div class="col-xs-6 col-sm-4 col-md-3 col-lg-2" style="margin-bottom: 10px;">
+            <a href="{{ url_for('wallabag.articles_by_tag', tag_slug=tag.slug) }}" class="btn btn-default btn-block">
+                {{ tag.label }}
+                {% if tag.nbEntries %}
+                <span class="badge">{{ tag.nbEntries }}</span>
+                {% endif %}
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="alert alert-info">{{_('No tags found.')}}</div>
+    {% endif %}
+</div>
+{% endblock %}

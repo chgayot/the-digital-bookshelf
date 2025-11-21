@@ -59,6 +59,13 @@ def main():
         oauth_available = False
         oauth = None
 
+    try:
+        from .wallabag import wallabag_bp
+        wallabag_available = True
+    except ImportError:
+        wallabag_available = False
+        wallabag_bp = None
+
     from . import web_server
     init_errorhandler()
 
@@ -82,5 +89,7 @@ def main():
         limiter.limit("3/minute", key_func=get_remote_address)(kobo)
     if oauth_available:
         app.register_blueprint(oauth)
+    if wallabag_available:
+        app.register_blueprint(wallabag_bp)
     success = web_server.start()
     sys.exit(0 if success else 1)

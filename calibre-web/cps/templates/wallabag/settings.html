@@ -1,0 +1,106 @@
+{% extends "layout.html" %}
+{% block body %}
+<div class="discover">
+    <h2>{{_('Wallabag Settings')}}</h2>
+
+    <div class="row">
+        <div class="col-md-8 col-md-offset-2">
+            <form method="post" action="{{ url_for('wallabag.settings') }}">
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">{{_('Connection Settings')}}</h3>
+                    </div>
+                    <div class="panel-body">
+                        <div class="checkbox">
+                            <label>
+                                <input type="checkbox" name="enabled" {% if wb_config.enabled %}checked{% endif %}>
+                                {{_('Enable Wallabag Integration')}}
+                            </label>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="host">{{_('Wallabag Server URL')}}</label>
+                            <input type="url" class="form-control" id="host" name="host"
+                                   value="{{ wb_config.host }}" placeholder="https://wallabag.example.com">
+                            <p class="help-block">{{_('The URL of your Wallabag instance')}}</p>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="client_id">{{_('Client ID')}}</label>
+                            <input type="text" class="form-control" id="client_id" name="client_id"
+                                   value="{{ wb_config.client_id }}">
+                            <p class="help-block">{{_('OAuth2 Client ID from Wallabag API settings')}}</p>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="client_secret">{{_('Client Secret')}}</label>
+                            <input type="password" class="form-control" id="client_secret" name="client_secret"
+                                   value="{{ wb_config.client_secret }}">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="username">{{_('Wallabag Username')}}</label>
+                            <input type="text" class="form-control" id="username" name="username"
+                                   value="{{ wb_config.username }}">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="password">{{_('Wallabag Password')}}</label>
+                            <input type="password" class="form-control" id="password" name="password"
+                                   placeholder="{% if wb_config.password %}(unchanged){% endif %}">
+                            <p class="help-block">{{_('Leave empty to keep current password')}}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel panel-info">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">{{_('How to get API credentials')}}</h3>
+                    </div>
+                    <div class="panel-body">
+                        <ol>
+                            <li>{{_('Log in to your Wallabag instance')}}</li>
+                            <li>{{_('Go to')}}: <code>API clients management</code> ({{_('under your profile or developer settings')}})</li>
+                            <li>{{_('Create a new API client')}}</li>
+                            <li>{{_('Copy the Client ID and Client Secret here')}}</li>
+                        </ol>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <button type="submit" class="btn btn-primary">{{_('Save Settings')}}</button>
+                    <a href="{{ url_for('wallabag.index') }}" class="btn btn-default">{{_('Cancel')}}</a>
+                    <button type="button" id="test-connection" class="btn btn-info pull-right">{{_('Test Connection')}}</button>
+                </div>
+            </form>
+
+            <div id="test-result" class="alert" style="display: none; margin-top: 15px;"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('test-connection').addEventListener('click', function() {
+    var resultDiv = document.getElementById('test-result');
+    resultDiv.style.display = 'block';
+    resultDiv.className = 'alert alert-info';
+    resultDiv.textContent = '{{_('Testing connection...')}}';
+
+    fetch('{{ url_for("wallabag.test_connection") }}')
+        .then(function(response) { return response.json(); })
+        .then(function(data) {
+            if (data.success) {
+                resultDiv.className = 'alert alert-success';
+                resultDiv.textContent = '{{_('Connection successful! Wallabag version:')}} ' + data.version;
+            } else {
+                resultDiv.className = 'alert alert-danger';
+                resultDiv.textContent = '{{_('Connection failed:')}} ' + data.error;
+            }
+        })
+        .catch(function(error) {
+            resultDiv.className = 'alert alert-danger';
+            resultDiv.textContent = '{{_('Connection failed:')}} ' + error;
+        });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,72 @@
+{% extends "layout.html" %}
+{% block body %}
+<div class="discover">
+    <div class="row">
+        <div class="col-md-10 col-md-offset-1">
+            <nav aria-label="breadcrumb" style="margin-bottom: 15px;">
+                <ol class="breadcrumb">
+                    <li><a href="{{ url_for('wallabag.index') }}">{{_('Articles')}}</a></li>
+                    <li class="active">{{ entry.title[:50] }}...</li>
+                </ol>
+            </nav>
+
+            <article class="wallabag-article">
+                <header style="margin-bottom: 20px;">
+                    <h1>{{ entry.title }}</h1>
+                    <p class="text-muted">
+                        {% if entry.domain_name %}
+                        <a href="{{ entry.url }}" target="_blank" rel="noopener">{{ entry.domain_name }}</a> &middot;
+                        {% endif %}
+                        {% if entry.reading_time %}{{ entry.reading_time }} min read &middot;{% endif %}
+                        {% if entry.created_at %}{{ entry.created_at[:10] }}{% endif %}
+                    </p>
+                    {% if entry.tags %}
+                    <p>
+                        {% for tag in entry.tags %}
+                        <a href="{{ url_for('wallabag.articles_by_tag', tag_slug=tag.slug) }}" class="label label-default">{{ tag.label }}</a>
+                        {% endfor %}
+                    </p>
+                    {% endif %}
+                </header>
+
+                <div class="btn-toolbar" style="margin-bottom: 20px;">
+                    <div class="btn-group">
+                        <form action="{{ url_for('wallabag.star_article', entry_id=entry.id) }}" method="post" style="display: inline;">
+                            <button type="submit" class="btn btn-default">
+                                <span class="glyphicon glyphicon-star{% if not entry.is_starred %}-empty{% endif %}"></span>
+                                {% if entry.is_starred %}{{_('Unstar')}}{% else %}{{_('Star')}}{% endif %}
+                            </button>
+                        </form>
+                        <form action="{{ url_for('wallabag.archive_article', entry_id=entry.id) }}" method="post" style="display: inline;">
+                            <button type="submit" class="btn btn-default">
+                                <span class="glyphicon glyphicon-{% if entry.is_archived %}eye-open{% else %}eye-close{% endif %}"></span>
+                                {% if entry.is_archived %}{{_('Mark Unread')}}{% else %}{{_('Archive')}}{% endif %}
+                            </button>
+                        </form>
+                    </div>
+                    <div class="btn-group">
+                        <a href="{{ url_for('wallabag.export_article', entry_id=entry.id, format='epub') }}" class="btn btn-default">
+                            <span class="glyphicon glyphicon-download"></span> EPUB
+                        </a>
+                        <a href="{{ url_for('wallabag.export_article', entry_id=entry.id, format='pdf') }}" class="btn btn-default">PDF</a>
+                        <a href="{{ url_for('wallabag.export_article', entry_id=entry.id, format='mobi') }}" class="btn btn-default">MOBI</a>
+                    </div>
+                    <div class="btn-group pull-right">
+                        <a href="{{ entry.url }}" target="_blank" rel="noopener" class="btn btn-default">
+                            <span class="glyphicon glyphicon-new-window"></span> {{_('Original')}}
+                        </a>
+                    </div>
+                </div>
+
+                <div class="well article-content" style="font-size: 1.1em; line-height: 1.8;">
+                    {{ entry.content|safe }}
+                </div>
+
+                <footer style="margin-top: 30px;">
+                    <a href="{{ url_for('wallabag.index') }}" class="btn btn-default">&larr; {{_('Back to Articles')}}</a>
+                </footer>
+            </article>
+        </div>
+    </div>
+</div>
+{% endblock %}
