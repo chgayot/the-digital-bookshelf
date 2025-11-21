@@ -1,0 +1,14 @@
+services:
+    filesystem_cache:
+        class: Doctrine\Common\Cache\FilesystemCache
+        arguments:
+            - "%kernel.cache_dir%/doctrine/metadata"
+
+    # fixtures
+    Wallabag\DataFixtures\:
+        bind:
+            $defaultIgnoreOriginInstanceRules: '%wallabag.default_ignore_origin_instance_rules%'
+            $defaultInternalSettings: '%wallabag.default_internal_settings%'
+        resource: '../../fixtures/*'
+        tags: ['doctrine.fixture.orm']
+        autowire: true
