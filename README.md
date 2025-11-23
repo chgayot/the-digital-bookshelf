@@ -110,6 +110,75 @@ Default credentials: `admin` / `admin123`
 
 ## Usage
 
+### Library View - Visual Bookshelf Display
+
+The Library View (`/library`) provides a unique way to visualize your ebook collection as a **virtual bookshelf** with books displayed as vertical spines, organized by tags.
+
+#### Features
+
+- **Book Spine Display**: Books appear as vertical spines with titles and authors, resembling a real bookshelf
+- **Tag-Based Organization**: Each tag becomes a shelf row showing all books with that tag
+- **Size-Based Heights**: Book spine heights (100-280px) are calculated from:
+  - Custom columns: `pages`, `words`, `#pages`, `#words`
+  - File size (as fallback)
+- **Difficulty Sorting**: Books are sorted within each tag by difficulty level, then by size
+- **Color Coding**: Each book has a unique color generated from its title
+- **Difficulty Indicators**: Color-coded top borders show difficulty at a glance
+
+#### Tag Conventions
+
+To use the Library View effectively, tag your books with:
+
+**Required Tags** (for shelf organization):
+- Any regular tag (e.g., `Fiction`, `Science`, `Programming`, `History`)
+- Books without tags will not appear in Library View
+
+**Optional Difficulty Tags** (for sorting within shelves):
+- `diff:0` - Very Easy (green indicator)
+- `diff:1` - Easy (light green indicator)
+- `diff:2` - Medium (yellow indicator)
+- `diff:3` - Moderate (orange indicator)
+- `diff:4` - Hard (red-orange indicator)
+- `diff:5` - Very Hard (red indicator)
+
+**Note**: Difficulty tags (`diff:X`) are used for sorting only and won't create separate shelves.
+
+#### Sorting Logic
+
+Within each tag/shelf:
+1. **Primary sort**: Difficulty (easiest to hardest, then books without difficulty)
+2. **Secondary sort**: Size (smallest to largest within each difficulty)
+
+#### Adding Metadata for Better Display
+
+For accurate spine heights, add custom columns to your Calibre library:
+
+```bash
+# Using calibredb
+calibredb add_custom_column pages "Pages" int --is-multiple=False
+calibredb add_custom_column words "Word Count" int --is-multiple=False
+```
+
+Then set values:
+```bash
+calibredb set_custom pages 123 456  # Book ID 123, 456 pages
+```
+
+Or edit in Calibre-Web's edit interface.
+
+#### Example Setup
+
+```
+Tag: "Python Programming" + "diff:2"
+├── Small book (100px spine) - "Python Basics" (diff:0)
+├── Medium book (180px spine) - "Intermediate Python" (diff:2)
+└── Large book (280px spine) - "Advanced Python" (diff:5)
+
+Tag: "Science Fiction"
+├── Short story (120px spine) - No difficulty tag
+└── Novel (250px spine) - No difficulty tag
+```
+
 ### Viewing Articles
 
 Navigate to `/wallabag` in Calibre-Web to:
@@ -206,6 +275,13 @@ docker-compose up -d
 
 ## API Endpoints
 
+### Calibre-Web Routes
+
+| Route | Method | Description |
+|-------|--------|-------------|
+| `/library` | GET | Visual bookshelf view (all tags) |
+| `/library/<tag_filter>` | GET | Visual bookshelf view (specific tag) |
+
 ### Wallabag Integration Routes (Calibre-Web)
 
 | Route | Method | Description |
@@ -255,8 +331,12 @@ the-digital-bookshelf/
 │   │   ├── services/
 │   │   │   └── wallabag.py      # Wallabag API client
 │   │   ├── wallabag.py          # Flask blueprint
+│   │   ├── web.py               # Main routes (includes library_view)
+│   │   ├── constants.py         # Sidebar constants (SIDEBAR_LIBRARY)
+│   │   ├── render_template.py   # Sidebar configuration
 │   │   ├── templates/
-│   │   │   └── wallabag/        # Wallabag templates
+│   │   │   ├── wallabag/        # Wallabag templates
+│   │   │   └── library.html     # Library view template
 │   │   ├── ub.py                # User database (WallabagConfig model)
 │   │   └── main.py              # Blueprint registration
 │   └── requirements.txt
